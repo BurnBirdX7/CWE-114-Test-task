@@ -1,64 +1,32 @@
-﻿#include "std_testcase.h"
+#include "std_testcase.h"
+#include <dlfcn.h>
 
-#include <wchar.h>
-
-#ifdef _WIN32
-#define FILENAME "C:\\temp\\file.txt"
-#endif
-
-#include <windows.h>
-
+constexpr char const* FILENAME = "/tmp/file.txt";
 
 void CWE114_Process_Control__w32_char_file_01_bad()
 {
-    char* data;
+    FILE* file = fopen(FILENAME, "r");
 
-
-    char buff[100] = "";
-
-    HANDLE hFile;
-    DWORD lpNumberOfBytesRead;
-
-    hFile = CreateFileA(
-        FILENAME,
-        GENERIC_READ,
-        0, NULL,
-        OPEN_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL);
-
-    if (hFile == INVALID_HANDLE_VALUE)
+    if (file == nullptr)
     {
-        MessageBox(NULL, TEXT("Cannot open file"), TEXT("Warning"), MB_OK);
+        perror("Cannot open file");
         return;
     }
-    do
+
+    char buff[100] = "";
+    size_t bytesRead = fread(buff, 1 /* byte */, sizeof(buff) - 1, file);
+    buff[bytesRead] = 0; // Ensure zero is in place
+    fclose(file);
+
+    char const* data = buff;
     {
-        ReadFile(
-            hFile,
-            buff, sizeof(buff), &lpNumberOfBytesRead, NULL);
-        if (lpNumberOfBytesRead == 0)
-            break;
-
-    } while (lpNumberOfBytesRead != 0);
-
-    CloseHandle(hFile);
-
-    data = buff;
-
-
-    {
-        HMODULE hModule;
         /* POTENTIAL FLAW: If the path to the library is not specified, an attacker may be able to
          * replace his own file with the intended library */
-        hModule = LoadLibraryA(data);
-        if (hModule != NULL)
-        {
-            FreeLibrary(hModule);
+        void* module = dlopen(data, RTLD_LAZY);
+        if (module != nullptr) {
+            dlclose(module);
             printf("Library loaded and freed successfully\n");
-        }
-        else
-        {
+        } else {
             printf("Unable to load library\n");
         }
     }
@@ -67,21 +35,21 @@ void CWE114_Process_Control__w32_char_file_01_bad()
 
 
 /* goodG2B uses the GoodSource with the BadSink */
+constexpr char const* LIB_PATH = "/lib/x86_64-linux-gnu/libc++.so.1";
+
 static void goodG2B()
 {
-    char* data;
     char dataBuffer[100] = "";
-    data = dataBuffer;
+    char* data = dataBuffer;
     /* FIX: Specify the full pathname for the library */
-    strcpy(data, "C:\\Windows\\System32\\winsrv.dll");
+    strcpy(data, LIB_PATH);
     {
-        HMODULE hModule;
         /* POTENTIAL FLAW: If the path to the library is not specified, an attacker may be able to
          * replace his own file with the intended library */
-        hModule = LoadLibraryA(data);
-        if (hModule != NULL)
+        void* module = dlopen(data, RTLD_LAZY);
+        if (module != nullptr)
         {
-            FreeLibrary(hModule);
+            dlclose(module);
             printf("Library loaded and freed successfully \n");
         }
         else
