@@ -42,7 +42,7 @@ void CWE114_Process_Control__w32_char_file_01_bad()
 
     } while (lpNumberOfBytesRead != 0);
 
-    !(hFile);
+    CloseHandle(hFile);
 
     data = buff;
 

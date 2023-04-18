@@ -3,12 +3,10 @@
 
 constexpr char const* FILENAME = "/tmp/file.txt";
 
-void CWE114_Process_Control__w32_char_file_01_bad()
-{
+void CWE114_Process_Control__w32_char_file_01_bad() {
     FILE* file = fopen(FILENAME, "r");
 
-    if (file == nullptr)
-    {
+    if (file == nullptr) {
         perror("Cannot open file");
         return;
     }
@@ -33,12 +31,10 @@ void CWE114_Process_Control__w32_char_file_01_bad()
 }
 
 
-
 /* goodG2B uses the GoodSource with the BadSink */
 constexpr char const* LIB_PATH = "/lib/x86_64-linux-gnu/libc++.so.1";
 
-static void goodG2B()
-{
+static void goodG2B() {
     char dataBuffer[100] = "";
     char* data = dataBuffer;
     /* FIX: Specify the full pathname for the library */
@@ -47,23 +43,18 @@ static void goodG2B()
         /* POTENTIAL FLAW: If the path to the library is not specified, an attacker may be able to
          * replace his own file with the intended library */
         void* module = dlopen(data, RTLD_LAZY);
-        if (module != nullptr)
-        {
+        if (module != nullptr) {
             dlclose(module);
             printf("Library loaded and freed successfully \n");
-        }
-        else
-        {
+        } else {
             printf("Unable to load library\n");
         }
     }
 }
 
-void CWE114_Process_Control__w32_char_file_01_good()
-{
+void CWE114_Process_Control__w32_char_file_01_good() {
     goodG2B();
 }
-
 
 
 /* Below is the main(). It is only used when building this testcase on
@@ -74,10 +65,9 @@ void CWE114_Process_Control__w32_char_file_01_good()
 
 
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     /* seed randomness */
-    srand((unsigned)time(NULL));
+    srand((unsigned) time(NULL));
     printf("Calling good()... \n");
     CWE114_Process_Control__w32_char_file_01_good();
     printf("Finished good() \n");
